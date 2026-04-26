@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠忆绿洲 · 纪念堂</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, -apple-system, sans-serif;}
+        body{background: linear-gradient(#f6f2ef, #f0e8e0);color:#555;min-height:100vh;}
+        .header{background:rgba(255,255,255,0.9);padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e6d5c8;position:sticky;top:0;z-index:99;}
+        .title{font-size:18px;font-weight:500;color:#8b5a42;}
+        .back-btn, .setting-btn{color:#8b5a42;cursor:pointer;}
+        .pet-main{text-align:center;padding:30px 20px;}
+        .pet-img-container{position:relative;display:inline-block;}
+        .pet-img{width:220px;height:220px;border-radius:50%;object-fit:cover;border:6px solid #d4b8a0;box-shadow:0 8px 20px rgba(139,90,66,0.15);}
+        .pet-name{font-size:26px;margin:14px 0 6px;font-weight:bold;color:#5c4033;}
+        .pet-date{font-size:14px;color:#998b86;letter-spacing:1px;}
+        .blessing{color:#d49a89;margin-top:10px;font-size:16px;line-height:1.5;}
+        .worship{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:0 20px;margin:30px 0;}
+        .item{background:rgba(255,255,255,0.9);padding:18px 10px;border-radius:16px;text-align:center;box-shadow:0 3px 10px rgba(139,90,66,0.1);cursor:pointer;transition:transform 0.2s ease;}
+        .item:hover{transform:translateY(-3px);}
+        .item span{font-size:26px;}
+        .item p{font-size:13px;margin-top:8px;color:#5c4033;}
+        .album{padding:20px;}
+        .album-title{font-size:18px;margin-bottom:15px;padding-left:8px;color:#5c4033;}
+        .photo-box{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+        .photo{width:100%;aspect-ratio:1;border-radius:12px;object-fit:cover;box-shadow:0 2px 8px rgba(139,90,66,0.1);}
+        .msg-section{padding:20px;}
+        .msg-title{font-size:18px;margin-bottom:15px;padding-left:8px;color:#5c4033;}
+        .msg-input-container{position:relative;}
+        .msg-input{width:100%;padding:16px 20px;border-radius:30px;border:1px solid #d4b8a0;outline:none;background:rgba(255,255,255,0.9);font-size:15px;color:#555;}
+        .send-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#d49a89;color:white;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+        .footer{text-align:center;padding:30px 0;font-size:13px;color:#aaa;letter-spacing:1px;}
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="back-btn">← 返回</div>
+    <div class="title">宠忆绿洲 · 纪念堂</div>
+    <div class="setting-btn">⚙️</div>
+</div>
+
+<div class="pet-main">
+    <div class="pet-img-container">
+        <!-- 把下面的图片链接替换成你猫咪照片的在线地址，或者和HTML文件放同一文件夹用本地路径 -->
+        <img src="https://picsum.photos/id/40/400/400" class="pet-img" alt="小豆" id="main-pet-img">
+    </div>
+    <div class="pet-name">小豆</div>
+    <div class="pet-date">2020.4.16 - 2026.3.12 | 陪伴了6年</div>
+    <div class="blessing">愿你在喵星永远有吃不完的小鱼干，永远有温暖的阳光☀️</div>
+</div>
+
+<div class="worship">
+    <div class="item">
+        <span>🕯️</span>
+        <p>点亮长明灯</p>
+    </div>
+    <div class="item">
+        <span>🪔</span>
+        <p>敬一炷香</p>
+    </div>
+    <div class="item">
+        <span>🌹</span>
+        <p>献上鲜花</p>
+    </div>
+    <div class="item">
+        <span>🐟</span>
+        <p>供奉零食</p>
+    </div>
+</div>
+
+<div class="album">
+    <div class="album-title">宝贝的时光相册</div>
+    <div class="photo-box">
+        <img src="https://picsum.photos/id/40/300/300" class="photo" alt="猫咪照片">
+        <img src="https://picsum.photos/id/1074/300/300" class="photo" alt="猫咪照片">
+        <img src="https://picsum.photos/id/1069/300/300" class="photo" alt="猫咪照片">
+    </div>
+</div>
+
+<div class="msg-section">
+    <div class="msg-title">烛光留言</div>
+    <div class="msg-input-container">
+        <input type="text" class="msg-input" placeholder="想对宝贝说的悄悄话...">
+        <button class="send-btn">✉️</button>
+    </div>
+</div>
+
+<div class="footer">思念永不落幕 · 爱意永远相伴</div>
+</body>
+</html>
