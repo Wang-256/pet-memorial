@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>宠忆绿洲 · 纪念堂</title>
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@3.15.0/dist/av-min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         body{
@@ -229,94 +230,128 @@
 </div>
 
 <script>
-// 人数计数
-function get(key) { return parseInt(localStorage.getItem(key)) || 0; }
-function set(key, val) { localStorage.setItem(key, val); }
-
-// 记录当前用户是否已点击过
-function isClick(type){
-    return localStorage.getItem("done_"+type) === "1";
-}
-function markClick(type){
-    localStorage.setItem("done_"+type,"1");
-}
+// 云端数据库 稳定可用
+AV.init({
+  appId: "hl2H9vysd2O6Q6jDmL9X0000-MdYXbMMI",
+  appKey: "6kT8Gg5q1cN9zX7bC3mW5yA1",
+  serverURL: "https://hl2h9vyse2o6q6jdml9x.lc-cn-n1-shared.com"
+});
 
 const modal = document.getElementById('modal');
 const modalText = document.getElementById('modalText');
 
-// 点亮明灯
-function addLight(){
-    if(isClick("light")){
-        modalText.innerText = "🕯️\n你已点亮过明灯\n无需重复祈福";
+// 本地限制：一人只能点一次
+function isDone(type){
+    return localStorage.getItem('done_'+type) === 'ok';
+}
+function setDone(type){
+    localStorage.setItem('done_'+type,'ok');
+}
+
+// ========== 全局统一祭拜次数 ==========
+async function getCount(type){
+    const q = new AV.Query('CountData');
+    q.equalTo('type',type);
+    let res = await q.first();
+    return res ? res.get('num') : 0;
+}
+async function saveCount(type,num){
+    const q = new AV.Query('CountData');
+    q.equalTo('type',type);
+    let d = await q.first() || new AV.Object('CountData');
+    d.set('type',type);
+    d.set('num',num);
+    await d.save();
+}
+
+// 点灯
+async function addLight(){
+    if(isDone('light')){
+        modalText.innerText = "🕯️\n你已点亮过明灯";
         modal.style.display = "flex";
         return;
     }
-    let n = get('light')+1; set('light',n);
-    markClick("light");
-    modalText.innerText = `🕯️\n你是第${n}位\n点亮明灯的人`;
+    let n = await getCount('light') + 1;
+    await saveCount('light',n);
+    setDone('light');
+    modalText.innerText = `🕯️\n你是第${n}位点亮明灯的人`;
     modal.style.display = "flex";
 }
-
-// 静心敬香
-function addIncense(){
-    if(isClick("incense")){
-        modalText.innerText = "🪷\n你已敬过香\n心怀思念即可";
+// 敬香
+async function addIncense(){
+    if(isDone('incense')){
+        modalText.innerText = "🪷\n你已敬过香";
         modal.style.display = "flex";
         return;
     }
-    let n = get('incense')+1; set('incense',n);
-    markClick("incense");
-    modalText.innerText = `🪷\n你是第${n}位\n敬香祭拜的人`;
+    let n = await getCount('incense') + 1;
+    await saveCount('incense',n);
+    setDone('incense');
+    modalText.innerText = `🪷\n你是第${n}位静心敬香的人`;
     modal.style.display = "flex";
 }
-
-// 敬献鲜花
-function addFlower(){
-    if(isClick("flower")){
-        modalText.innerText = "🌹\n你已献过花\n思念永远留存";
+// 献花
+async function addFlower(){
+    if(isDone('flower')){
+        modalText.innerText = "🌹\n你已敬献鲜花";
         modal.style.display = "flex";
         return;
     }
-    let n = get('flower')+1; set('flower',n);
-    markClick("flower");
-    modalText.innerText = `🌹\n你是第${n}位\n敬献鲜花的人`;
+    let n = await getCount('flower') + 1;
+    await saveCount('flower',n);
+    setDone('flower');
+    modalText.innerText = `🌹\n你是第${n}位献花思念的人`;
     modal.style.display = "flex";
 }
-
-// 供奉好物
-function addGift(){
-    if(isClick("gift")){
-        modalText.innerText = "🍼\n你已完成供奉\n爱意长久相伴";
+// 供奉
+async function addGift(){
+    if(isDone('gift')){
+        modalText.innerText = "🍼\n你已完成供奉";
         modal.style.display = "flex";
         return;
     }
-    let n = get('gift')+1; set('gift',n);
-    markClick("gift");
+    let n = await getCount('gift') + 1;
+    await saveCount('gift',n);
+    setDone('gift');
+    modalText.innerText = `🍼\n你是第${n}位供奉祈福的人`;
     modal.style.display = "flex";
-    modalText.innerText = `🍼\n你是第${n}位\n供奉祈福的人`;
 }
 
-function closeModal(){ modal.style.display = "none"; }
+function closeModal(){
+    modal.style.display = "none";
+}
 
-// 留言永久保存
-function sendMsg(){
-    let val = document.getElementById('msgContent').value.trim();
-    if(!val) return alert('请输入内容');
-    let list = JSON.parse(localStorage.getItem('msgs')) || [];
-    list.unshift({content:val, time:new Date().toLocaleString()});
-    localStorage.setItem('msgs', JSON.stringify(list));
-    document.getElementById('msgContent').value = '';
+// ========== 公共留言板 全局可见 ==========
+async function sendMsg(){
+    let val = document.getElementById("msgContent").value.trim();
+    if(!val) return alert('请先写下思念');
+    let m = new AV.Object('Message');
+    m.set('text',val);
+    await m.save();
+    document.getElementById("msgContent").value = '';
     loadMsg();
 }
-function loadMsg(){
-    let list = JSON.parse(localStorage.getItem('msgs')) || [];
+async function loadMsg(){
+    let q = new AV.Query('Message');
+    q.descending('createdAt');
+    q.limit(50);
+    let list = await q.find();
     let html = '';
-    list.forEach(i=>{
-        html+=`<div class="msg-item"><div class="msg-text">${i.content}</div><div class="msg-time">${i.time}</div></div>`;
+    list.forEach(item=>{
+        let time = item.createdAt.toLocaleString();
+        html += `
+        <div class="msg-item">
+            <div class="msg-text">${item.get('text')}</div>
+            <div class="msg-time">${time}</div>
+        </div>
+        `;
     });
-    document.getElementById('msgList').innerHTML = html;
+    document.getElementById("msgList").innerHTML = html;
 }
-window.onload = loadMsg;
+
+window.onload = function(){
+    loadMsg();
+}
 </script>
 
 </body>
