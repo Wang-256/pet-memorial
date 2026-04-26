@@ -11,6 +11,7 @@
             background: linear-gradient(160deg, #f5efe9 0%, #eae2da 100%);
             min-height: 100vh;
             color: #6b5c53;
+            padding-bottom: 80px;
         }
         .top-bar{
             display: flex;
@@ -81,26 +82,69 @@
             font-size: 13px;
             color: #6b5c53;
         }
-        .msg-input{
-            margin: 0 20px;
+
+        /* 留言区域 */
+        .msg-wrap{
+            padding: 0 20px;
         }
-        .msg-input input{
-            width: 100%;
-            padding: 17px 25px;
-            border-radius: 50px;
+        .send-box{
+            display:flex;
+            gap:10px;
+            margin-bottom:25px;
+        }
+        .msg-input{
+            flex:1;
+            padding:16px 20px;
+            border-radius: 30px;
             border: 1px solid #d9c9bc;
             background: rgba(255,255,255,0.8);
             font-size: 15px;
             outline: none;
         }
+        .send-btn{
+            padding:0 20px;
+            border-radius:30px;
+            border:none;
+            background:#d9c9bc;
+            color:#5a4940;
+            cursor:pointer;
+        }
+        .list-title{
+            font-size:15px;
+            color:#8c6d5c;
+            margin-bottom:15px;
+            padding-left:5px;
+        }
+        .msg-list{
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+        .msg-item{
+            background:rgba(255,255,255,0.75);
+            padding:15px;
+            border-radius:16px;
+        }
+        .msg-text{
+            color:#5a4940;
+            font-size:14px;
+            line-height:1.6;
+        }
+        .msg-time{
+            font-size:11px;
+            color:#b0a296;
+            margin-top:8px;
+        }
+
         .footer-txt{
             text-align: center;
-            padding: 50px 0 30px;
+            padding: 40px 0 20px;
             font-size: 12px;
             color: #a9988c;
             letter-spacing: 1px;
         }
-        /* 高级弹窗 */
+
+        /* 弹窗 */
         .modal{
             position: fixed;
             top: 0;
@@ -137,6 +181,8 @@
             font-size: 15px;
         }
     </style>
+    <!-- 免费云端数据库 全局共享数据 -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.10.1/dist/av-min.js"></script>
 </head>
 <body>
 
@@ -172,14 +218,21 @@
     </div>
 </div>
 
-<div class="msg-input">
-    <input type="text" placeholder="轻声诉说 藏起思念...">
+<!-- 公共留言区 -->
+<div class="msg-wrap">
+    <div class="send-box">
+        <input class="msg-input" id="msgContent" placeholder="写下对宝贝的思念，全员可见...">
+        <button class="send-btn" onclick="sendMsg()">发送</button>
+    </div>
+    <div class="list-title">🌙 大家的思念留言</div>
+    <div class="msg-list" id="msgList"></div>
 </div>
 
 <div class="footer-txt">
     思念不负相遇 · 爱意从未消散
 </div>
 
+<!-- 祭拜弹窗 -->
 <div class="modal" id="modal">
     <div class="modal-box">
         <div class="modal-txt" id="modalText"></div>
@@ -188,49 +241,95 @@
 </div>
 
 <script>
-    // 读取永久储存数据
-    function getNum(key){
-        return parseInt(localStorage.getItem(key)) || 0;
-    }
-    function setNum(key,val){
-        localStorage.setItem(key,val);
-    }
+// 初始化免费云端数据库
+AV.init({
+  appId: "vEj5Uf9k5dC2R1mZ7Hh9j9s9-MdYXbMMI",
+  appKey: "8s7X9qF2cV5bN7gH3jK1pQ6rT8yA4zB",
+  serverURL: "https://lc-cn-north-1.leancloud.app"
+});
 
-    const modal = document.getElementById('modal');
-    const modalText = document.getElementById('modalText');
+const modal = document.getElementById('modal');
+const modalText = document.getElementById('modalText');
 
-    // 点亮明灯
-    function addLight(){
-        let n = getNum('light') + 1;
-        setNum('light',n);
-        modalText.innerText = `🕯️\n你是第${n}位\n点亮明灯怀念的人`;
-        modal.style.display = "flex";
-    }
-    // 静心敬香
-    function addIncense(){
-        let n = getNum('incense') + 1;
-        setNum('incense',n);
-        modalText.innerText = `🪷\n你是第${n}位\n静心敬香祭拜的人`;
-        modal.style.display = "flex";
-    }
-    // 敬献繁花
-    function addFlower(){
-        let n = getNum('flower') + 1;
-        setNum('flower',n);
-        modalText.innerText = "🌹\n你是第"+n+"位\n敬献鲜花思念的人";
-        modal.style.display = "flex";
-    }
-    // 供奉好物
-    function addGift(){
-        let n = getNum('gift') + 1;
-        setNum('gift',n);
-        modalText.innerText = `🍼\n你是第${n}位\n供奉祈福的人`;
-        modal.style.display = "flex";
-    }
-    // 关闭弹窗
-    function closeModal(){
-        modal.style.display = "none";
-    }
+// ========== 全局祭拜计数 ==========
+async function getCount(name){
+    const query = new AV.Query('WorshipCount');
+    query.equalTo('type', name);
+    let res = await query.first();
+    return res ? res.get('num') : 0;
+}
+async function saveCount(name,num){
+    const query = new AV.Query('WorshipCount');
+    query.equalTo('type', name);
+    let data = await query.first() || new AV.Object('WorshipCount');
+    data.set('type',name);
+    data.set('num',num);
+    await data.save();
+}
+
+async function addLight(){
+    let n = await getCount('light') + 1;
+    await saveCount('light',n);
+    modalText.innerText = `🕯️\n你是第${n}位\n点亮明灯怀念的人`;
+    modal.style.display = "flex";
+}
+async function addIncense(){
+    let n = await getCount('incense') + 1;
+    await saveCount('incense',n);
+    modalText.innerText = `🪷\n你是第${n}位\n静心敬香祭拜的人`;
+    modal.style.display = "flex";
+}
+async function addFlower(){
+    let n = await getCount('flower') + 1;
+    await saveCount('flower',n);
+    modalText.innerText = `🌹\n你是第${n}位\n敬献鲜花思念的人`;
+    modal.style.display = "flex";
+}
+async function addGift(){
+    let n = await getCount('gift') + 1;
+    await saveCount('gift',n);
+    modalText.innerText = `🍼\n你是第${n}位\n供奉祈福的人`;
+    modal.style.display = "flex";
+}
+function closeModal(){
+    modal.style.display = "none";
+}
+
+// ========== 公共留言板 ==========
+// 发送留言
+async function sendMsg(){
+    let val = document.getElementById('msgContent').value.trim();
+    if(!val) return alert('请写下思念再发送');
+    let Msg = new AV.Object('PetMessage');
+    Msg.set('content',val);
+    await Msg.save();
+    document.getElementById('msgContent').value = '';
+    loadMsg();
+}
+
+// 读取全部留言
+async function loadMsg(){
+    const query = new AV.Query('PetMessage');
+    query.descending('createdAt');
+    query.limit(50);
+    let list = await query.find();
+    let html = '';
+    list.forEach(item=>{
+        let time = item.createdAt.toLocaleString();
+        html += `
+        <div class="msg-item">
+            <div class="msg-text">${item.get('content')}</div>
+            <div class="msg-time">${time}</div>
+        </div>
+        `;
+    });
+    document.getElementById('msgList').innerHTML = html;
+}
+
+// 页面加载自动读取留言
+window.onload = function(){
+    loadMsg();
+}
 </script>
 
 </body>
