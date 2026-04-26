@@ -82,7 +82,6 @@
             font-size: 13px;
             color: #6b5c53;
         }
-
         .msg-wrap{
             padding: 0 20px;
         }
@@ -134,7 +133,6 @@
             color:#b0a296;
             margin-top:8px;
         }
-
         .footer-txt{
             text-align: center;
             padding: 40px 0 20px;
@@ -142,7 +140,6 @@
             color: #a9988c;
             letter-spacing: 1px;
         }
-
         .modal{
             position: fixed;
             top: 0;
@@ -232,37 +229,76 @@
 </div>
 
 <script>
-// 永久存储读取
+// 人数计数
 function get(key) { return parseInt(localStorage.getItem(key)) || 0; }
 function set(key, val) { localStorage.setItem(key, val); }
+
+// 记录当前用户是否已点击过
+function isClick(type){
+    return localStorage.getItem("done_"+type) === "1";
+}
+function markClick(type){
+    localStorage.setItem("done_"+type,"1");
+}
 
 const modal = document.getElementById('modal');
 const modalText = document.getElementById('modalText');
 
-// 祭拜按钮
+// 点亮明灯
 function addLight(){
+    if(isClick("light")){
+        modalText.innerText = "🕯️\n你已点亮过明灯\n无需重复祈福";
+        modal.style.display = "flex";
+        return;
+    }
     let n = get('light')+1; set('light',n);
+    markClick("light");
     modalText.innerText = `🕯️\n你是第${n}位\n点亮明灯的人`;
     modal.style.display = "flex";
 }
+
+// 静心敬香
 function addIncense(){
+    if(isClick("incense")){
+        modalText.innerText = "🪷\n你已敬过香\n心怀思念即可";
+        modal.style.display = "flex";
+        return;
+    }
     let n = get('incense')+1; set('incense',n);
+    markClick("incense");
     modalText.innerText = `🪷\n你是第${n}位\n敬香祭拜的人`;
     modal.style.display = "flex";
 }
+
+// 敬献鲜花
 function addFlower(){
+    if(isClick("flower")){
+        modalText.innerText = "🌹\n你已献过花\n思念永远留存";
+        modal.style.display = "flex";
+        return;
+    }
     let n = get('flower')+1; set('flower',n);
+    markClick("flower");
     modalText.innerText = `🌹\n你是第${n}位\n敬献鲜花的人`;
     modal.style.display = "flex";
 }
+
+// 供奉好物
 function addGift(){
+    if(isClick("gift")){
+        modalText.innerText = "🍼\n你已完成供奉\n爱意长久相伴";
+        modal.style.display = "flex";
+        return;
+    }
     let n = get('gift')+1; set('gift',n);
-    modalText.innerText = `🍼\n你是第${n}位\n供奉祈福的人`;
+    markClick("gift");
     modal.style.display = "flex";
+    modalText.innerText = `🍼\n你是第${n}位\n供奉祈福的人`;
 }
+
 function closeModal(){ modal.style.display = "none"; }
 
-// 留言功能
+// 留言永久保存
 function sendMsg(){
     let val = document.getElementById('msgContent').value.trim();
     if(!val) return alert('请输入内容');
@@ -282,5 +318,6 @@ function loadMsg(){
 }
 window.onload = loadMsg;
 </script>
+
 </body>
 </html>
